@@ -16,6 +16,6 @@ extern volatile uint8_t breakFlag; // this is only a declaration
 extern 			uint8_t isTAP;
 extern			uint8_t	RLEmode;
 
-void FileDialog();
+void FileDialog( void);
 
 #endif // FILEWORK_H
