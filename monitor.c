@@ -2,6 +2,7 @@
 #include "filework.h"
 #include "RLE.h"
 #include "SD_CARD/dos.h"
+#include <ctype.h>      // toupper
 
 #define TIMECONST1	0x12		// Zero Bit
 #define TIMECONST2	0x21		// One Bit and pretune
@@ -30,12 +31,12 @@ uint8_t waitEdge(void);
 uint16_t currAddr = 0;	// default memory address for dump
 uint16_t Arg[3];		// numeric arguments for dump etc.
 int8_t	 nArg;			// number of arguments
-uint8_t	 LineBuf[82];	// Line Buffer
+char   	 LineBuf[82];	// Line Buffer
 uint8_t  LinePtr;		// Pointer for Line Buffer
 uint8_t	 ArgPtr;		// from here on arguments etc
-uint8_t prompt[] = ">";
-uint8_t	cmd = 0;
-uint8_t recMem[MEMSIZE];// buffer for header contents
+char     prompt[] = ">";
+uint8_t  cmd = 0;
+uint8_t  recMem[MEMSIZE];// buffer for header contents
 uint32_t RAMcounter;			// record memory pointer
 char filename[] = "             "; // string for file name
 volatile uint8_t pending = 0;	// pending flag for Key handling
@@ -485,10 +486,22 @@ void replay(void)
 	else KCreplay();
 }
 
+void progress(uint8_t block, uint8_t progress)
+{
+    lcd_number_xy( 6, 1, block, 4, ' ');
+    lcd_put_bar( 2, progress);
+}
+
 void KCreplay(void)			// KC mode
 {
 uint32_t	pos = 0;		// position in data buffer
 uint8_t		i;
+uint16_t    block = 1;
+
+    // clear logo
+    lcd_string_xy( 0, 1, "block     ");
+    lcd_string_xy( 6, 2, "    ");
+
 	if (recMem[0] == 0xC3) isTAP = 16;
 	else isTAP = 0;
 	sermem_reset();			// reset serial mem to position zero
@@ -501,10 +514,12 @@ uint8_t		i;
 	PLAY_LED_ON;
 	CTC_INT_ON;
 //		beep(3000);			// initial beep, not required
+    beep( 1000);
 	if (isTAP) {		// TAP file
 		for (i=0;i<16;i++) sermem_readByte();
 		pos += 16;
 		while (pos < RAMcounter) {
+            progress( block++, pos * 80 / RAMcounter);
 			playBlock(pos);
 			pos += 129;	
 			if (breakFlag) break;
@@ -512,6 +527,7 @@ uint8_t		i;
 	}							// raw file
 	else {
 		while (pos < RAMcounter) {
+            progress( block++, pos * 80 / RAMcounter);
 			playBlock(pos);
 			pos += 130;	
 			if (breakFlag) break;

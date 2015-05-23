@@ -55,8 +55,6 @@ void 	dispFileName(char *filename);
 void 	eraseRAM(void);
 void 	writeFile_SD(char *filename);
 void 	Bin2Hex(char *here,uint16_t number,uint8_t digits);
-void    lcd_init_logo( void);
-void    lcd_put_logo( uint8_t x, uint8_t y);
 
 
 // variable declarations

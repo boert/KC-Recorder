@@ -1,5 +1,4 @@
 #include "main.h"
-#include "logo.h"
 
 uint8_t 			serbuffer[SERBUFSIZE];
 uint16_t			serRdPointer;
@@ -40,7 +39,6 @@ int main(void)
 	initCounter();	// start counter but do not yet activate interrupt for it
 	initUART();		// prepare UART settings
 	lcd_init();		// initialize LCD, cursor off
-    lcd_init_logo();// program characters
 	sermem_init();	// initialize serial memory
 	// output redirect
 	FILE uart_output = FDEV_SETUP_STREAM(uart_putChar, NULL, _FDEV_SETUP_WRITE);
@@ -90,24 +88,3 @@ uint8_t	c;
 	return c;
 }	// end of uart_getChar
 
-
-// program the display with logo characters
-void lcd_init_logo( void)
-{
-    lcd_generatechar_P( 0, logo, sizeof( logo)); 
-}
-
-void lcd_put_logo( uint8_t x, uint8_t y)
-{
-    lcd_setcursor( x, y + 0);
-    lcd_data( 0);
-    lcd_data( 1);
-    lcd_data( 2);
-    lcd_data( 3);
-
-    lcd_setcursor( x, y + 1);
-    lcd_data( 4);
-    lcd_data( 5);
-    lcd_data( 6);
-    lcd_data( 7);
-}

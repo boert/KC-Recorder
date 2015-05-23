@@ -6,6 +6,8 @@
 #define LCD_ROUTINES_H
  
 #include <avr/pgmspace.h>
+#include "logo.h"       // data for logo
+#include "lcd_bars.h"   // data for progress bar
  
 ////////////////////////////////////////////////////////////////////////////////
 // Pinbelegung für das LCD, an verwendete Pins anpassen
@@ -124,6 +126,21 @@ void lcd_generatechar_P( uint8_t code, PGM_P data, uint8_t lines );
 ////////////////////////////////////////////////////////////////////////////////
 // Ausgabe eines Kommandos an das LCD.
 void lcd_command( uint8_t data );
+
+
+////////////////////////////////////////////////////////////////////////////////
+// initialize CGRAM for logo or progress bar
+#define  LCD_INIT_LOGO()   lcd_generatechar_P( 0, logo, sizeof( logo))
+#define  LCD_INIT_BARS()   lcd_generatechar_P( 0, lcd_bars, sizeof( lcd_bars))
+
+////////////////////////////////////////////////////////////////////////////////
+// output of logo to LCD
+void    lcd_put_logo( uint8_t x, uint8_t y);
+
+////////////////////////////////////////////////////////////////////////////////
+// output of progress bar (nedd a complete line) on LCD
+void    lcd_put_bar( uint8_t line, uint8_t length);
+
  
 ////////////////////////////////////////////////////////////////////////////////
 // LCD Befehle und Argumente.

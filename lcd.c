@@ -221,3 +221,54 @@ void lcd_generatechar_P( uint8_t code, PGM_P data, uint8_t lines ) {
         data++;
     }
 }
+
+
+ 
+////////////////////////////////////////////////////////////////////////////////
+// draw a logo (2x4) on the screen
+// parameters: x & y position of left top
+void lcd_put_logo( uint8_t x, uint8_t y)
+{
+    LCD_INIT_LOGO();
+    lcd_setcursor( x, y + 0);
+    lcd_data( 0);
+    lcd_data( 1);
+    lcd_data( 2);
+    lcd_data( 3);
+
+    lcd_setcursor( x, y + 1);
+    lcd_data( 4);
+    lcd_data( 5);
+    lcd_data( 6);
+    lcd_data( 7);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// put a progress bar with some graphic chars on specific line
+// length is given in 'pixel' (= char * 5)
+void lcd_put_bar( uint8_t line, uint8_t length)
+{
+    uint8_t index;
+    ldiv_t  value;
+
+    LCD_INIT_BARS();
+    lcd_setcursor( 0, line);
+    value = ldiv( length, 5);
+
+    // solid part
+    for( index = 0; index < value.quot; index++)
+    {
+        lcd_data( 0xff );
+    }
+
+    // small part
+    lcd_data( value.rem);
+    index++;
+
+    for( ; index < 16; index++)
+    {
+        lcd_data( ' ');
+    }
+
+}
