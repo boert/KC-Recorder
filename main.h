@@ -48,7 +48,7 @@
 // function prototypes
 void 	initCounter(void);
 void 	initUART(void);
-int  	uart_putChar(uint8_t c);
+int     uart_putChar(uint8_t c);
 uint8_t	uart_getChar(void);
 void 	monitor(void);
 void 	dispFileName(char *filename);

@@ -22,6 +22,8 @@ ISR (TIMER0_COMPA_vect)
 	rleCounter++;	// 32 bit counter for recording
 	downCounter--;	// 8  bit counter for replay
 }
+	
+static FILE uart_output = FDEV_SETUP_STREAM(uart_putChar, NULL, _FDEV_SETUP_WRITE);
 
 int main(void)
 {
@@ -41,7 +43,6 @@ int main(void)
 	lcd_init();		// initialize LCD, cursor off
 	sermem_init();	// initialize serial memory
 	// output redirect
-	FILE uart_output = FDEV_SETUP_STREAM(uart_putChar, NULL, _FDEV_SETUP_WRITE);
 	stdout = &uart_output;
 	sei();
 	monitor();	// monitor is the main loop

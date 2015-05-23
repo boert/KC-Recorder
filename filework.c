@@ -7,7 +7,7 @@ uint8_t loadFile(void);
 void getFileList(void);
 void disp3Files(void);
 void waitforKeyReleased(uint8_t);
-uint8_t	waitforKeyPressed();
+uint8_t	waitforKeyPressed(void);
 void deleteDialog(void);
 
 extern void replay(void);
@@ -153,10 +153,12 @@ uint16_t repCount = 0;
 }	
 
 // debounced key press handling
-uint8_t	waitforKeyPressed()
+uint8_t	waitforKeyPressed(void)
 {
 uint8_t key, prevkey;
 uint16_t waiting = 1000;
+
+	prevkey = ~(DDRD | PIND) & KEYMASK;
 	do {
 		key = ~(DDRD | PIND) & KEYMASK;
 		if (key && (key == prevkey)) waiting--;
