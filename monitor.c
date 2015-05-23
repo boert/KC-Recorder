@@ -608,9 +608,10 @@ void displayMenu(char * c)
 {
 	lcd_clear();
 	lcd_string_xy(0,3,c);
+    lcd_put_logo( 6, 1);
 }	// end of dispMenu
 
 void dispFileName(char *filename)
 {
-	lcd_string_xy(2,1,filename);
+	lcd_string_xy(2,0,filename);
 }	// end of dispFileName

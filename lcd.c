@@ -120,20 +120,21 @@ void lcd_setcursor( uint8_t x, uint8_t y ) {
  
     switch (y) {
         case 0:    // 1. Zeile
-            data = LCD_SET_DDADR + LCD_DDADR_LINE1 + x;
+            data = LCD_SET_DDADR + LCD_DDADR_LINE1;
             break;
         case 1:    // 2. Zeile
-            data = LCD_SET_DDADR + LCD_DDADR_LINE2 + x;
+            data = LCD_SET_DDADR + LCD_DDADR_LINE2;
             break;
         case 2:    // 3. Zeile
-            data = LCD_SET_DDADR + LCD_DDADR_LINE3 + x;
+            data = LCD_SET_DDADR + LCD_DDADR_LINE3;
             break;
         case 3:    // 4. Zeile
-            data = LCD_SET_DDADR + LCD_DDADR_LINE4 + x;
+            data = LCD_SET_DDADR + LCD_DDADR_LINE4;
             break;
         default:    
             return; // für den Fall einer falschen Zeile
     }
+    data += x;
  
     lcd_command( data );
 }

@@ -48,6 +48,7 @@ TARGET = main
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c monitor.c sermem.c lcd.c filework.c RLE.c SD_CARD/compact.c SD_CARD/dir.c SD_CARD/dos.c SD_CARD/drivefree.c SD_CARD/dumpsect.c SD_CARD/fat.c SD_CARD/find_x.c SD_CARD/lcd2.c SD_CARD/mem-check.c SD_CARD/mmc_spi.c SD_CARD/printf.c SD_CARD/readraw.c SD_CARD/serial.c
 
+
 # List Assembler source files here.
 # Make them always end in a capital .S.  Files ending in a lowercase .s
 # will not be considered source files but generated files (assembler
@@ -309,17 +310,15 @@ gccversion :
 
 
 
+# generate logo
+logo.h:	logo/cc.png
+	logo/png2c.py logo/cc.png > logo.h 
+
+
 # Program the device.  
 program: $(TARGET).hex $(TARGET).eep
-	# setserial /dev/ttyS0 spd_vhi low_latency
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
-	# echo "E" > /dev/ttyS0
 
-uisp: $(TARGET).hex
-#	stty -F /dev/ttyS0 ospeed 115200
-	setserial /dev/ttyS0 spd_vhi low_latency
-	uisp -dprog=avr910 -dpart=auto -dspeed=115200 --erase --verify --upload if=$(TARGET).hex
-	echo "E" > /dev/ttyS0
 
 
 # Convert ELF to COFF for use in debugging / simulating in AVR Studio or VMLAB.
@@ -431,9 +430,5 @@ clean_list :
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
 build elf hex eep lss sym coff extcoff \
 clean clean_list program
-
-
-
-
 
 
