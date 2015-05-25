@@ -19,10 +19,15 @@ void record(void);
 void KCgetFileName(void);
 void KCrecord(void);
 void KCreplay(void);
+void print_start_address( uint16_t offset);
+void KCCreplay( void);
 void prepareTAPheader(void);
 void replay(void);		// play previously recorded data
 void beep(uint16_t n);	// emit tuning signal
 void playBlock(uint16_t pos);
+void byteSeparator( void);
+void playByte( uint8_t b);
+void blockGap( void);
 void displayInitScreen(void);
 void displayMenu(char * c);
 uint8_t isBasic(uint8_t * there);
@@ -41,6 +46,8 @@ uint32_t RAMcounter;			// record memory pointer
 char filename[] = "             "; // string for file name
 volatile uint8_t pending = 0;	// pending flag for Key handling
 volatile uint8_t breakFlag = 0;	// flag for abandoning record or play
+enum filetypes   filetype;      // save filetype from last loads
+uint32_t         nblocks;       // number of 128-Byte blocks (=filelen)
 uint8_t isTAP = 0;			// offset in case a TAP file was loaded
 uint8_t	RLEmode = FALSE;	// special mode for Run Length Encoding
 
@@ -480,17 +487,42 @@ uint8_t x;
 }	// end of waitEdge
 
 
+// select replay function on filetype
 void replay(void)
 {
-	if (RLEmode) RLEreplay();
-	else KCreplay();
+
+    // clear logo
+    lcd_string_xy( 0, 1, "blk       ");
+    lcd_string_xy( 6, 2, "    ");
+    
+    // reset serial mem to position zero
+	sermem_reset();			
+
+    switch( filetype)
+    {
+        case type_tap:
+            KCreplay();  break;
+        case type_kcc:
+            KCCreplay(); break;
+        case type_kcb:
+            KCCreplay(); break;
+        default:
+            RLEreplay(); break;
+    }
 }
 
+
+// print progressbar for loading files
+// first param: block number (output in hex)
+// second param: length of bar (in pixel)
+//               each char has 5 pixel so 16 chars will be 80 pixel
 void progress(uint8_t block, uint8_t progress)
 {
-    lcd_number_xy( 6, 1, block, 4, ' ');
+    lcd_setcursor( 4, 1);
+    lcd_hexnumber( block);
     lcd_put_bar( 2, progress);
 }
+
 
 void KCreplay(void)			// KC mode
 {
@@ -498,13 +530,15 @@ uint32_t	pos = 0;		// position in data buffer
 uint8_t		i;
 uint16_t    block = 1;
 
-    // clear logo
-    lcd_string_xy( 0, 1, "block     ");
-    lcd_string_xy( 6, 2, "    ");
-
-	if (recMem[0] == 0xC3) isTAP = 16;
-	else isTAP = 0;
-	sermem_reset();			// reset serial mem to position zero
+	if (recMem[0] == 0xC3) 
+    {
+        isTAP = 16;
+        print_start_address( 17); // 16 for header, 1 for blk#
+    }
+	else
+    {
+        isTAP = 0;
+    }
 //
 	if (RAMcounter == 0) {
 		pending = 0;		// allow next input
@@ -541,6 +575,96 @@ uint16_t    block = 1;
 	pending = 0;
 }	// end of KCreplay
 
+
+// print start and end address
+void print_start_address( uint16_t offset)
+{
+    lcd_setcursor( 7, 1); 
+    if (( 0xd3 == recMem[ offset + 0]) & 
+        ( 0xd3 == recMem[ offset + 1]) & 
+        ( 0xd3 == recMem[ offset + 2]))
+    {
+        // basic file, print nothing
+        lcd_string_P( PSTR( "BASIC"));
+        return;
+    }
+
+    if (( 0xd6 == recMem[ offset + 0]) & 
+        ( 0xd6 == recMem[ offset + 1]) & 
+        ( 0xd6 == recMem[ offset + 2]))
+    {
+        // basic file, print nothing
+        lcd_string_P( PSTR( "BASIC"));
+        return;
+    }
+
+    // com file
+    lcd_hexnumber( recMem[ offset + 18]);
+    lcd_hexnumber( recMem[ offset + 17]); 
+    lcd_data( ':'); 
+    lcd_hexnumber( recMem[ offset + 20]);
+    lcd_hexnumber( recMem[ offset + 19]); 
+}
+
+// transmit memory content (KCC or KCB format) to tape connector
+void KCCreplay( void)
+{
+    uint32_t	pos   = 0;		// position in data buffer
+    uint16_t    block = 1;
+    uint8_t     index;
+    uint8_t     b;
+    uint8_t     checksum = 0;
+
+    // TODO: sinnvoll?, Code wird nur einmal angesprungen
+	if (RAMcounter == 0) {
+		pending = 0;		// allow next input
+		return;				// exit from replay
+	}
+
+    print_start_address( 0);
+	PLAY_LED_ON;
+	CTC_INT_ON;
+	
+	beep(1000);		   	// initial beep, not required
+    while (pos < RAMcounter) {
+        progress( block, pos * 80 / RAMcounter);
+
+        beep( 160);
+        byteSeparator();
+        if (( RAMcounter - pos) > 128)
+        {
+            playByte( block);
+        }
+        else
+        {
+            playByte( 0xff);
+        }
+        byteSeparator();
+        checksum = 0;
+        for( index = 0; index < 128; index++)
+        {
+            b = sermem_readByte();
+            checksum += b;
+            playByte( b);
+            byteSeparator();
+        }
+        playByte( checksum);
+        byteSeparator();
+        blockGap();
+
+        pos += 128;
+        block++;
+        if (breakFlag) break;
+    }	
+	PORTA ^= 1<<REPLAY;		//flip output one last time
+	_delay_ms(100);			//... and wait a bit
+	PORTA &= ~(1<<REPLAY);	//set PLAY voltage to GND
+	CTC_INT_OFF;
+	PLAY_LED_OFF;
+	pending = 0;
+}
+
+
 void beep(uint16_t n)
 {
 uint16_t i;
@@ -553,7 +677,7 @@ uint16_t i;
 
 void playBlock(uint16_t pos)
 {
-uint8_t i,j;
+uint8_t i;
 uint8_t b;
 uint8_t checksum = 0;
 uint8_t BlkLen = 130;
@@ -566,13 +690,7 @@ uint8_t offset = 0;
 	if (recMem[offset + 1] == 0xD5) beep(1800);	// list#1 requires long beep
 	else beep(160);
 	for (i=0;i<130;i++) {
-		// byte separator
-		downCounter = TIMECONST3;
-		while (downCounter) { };	// same timing mechanism as with record
-		PORTA ^= 1<<REPLAY;
-		downCounter = TIMECONST3;
-		while (downCounter) { };	// same timing mechanism as with record
-		PORTA ^= 1<<REPLAY;
+        byteSeparator();
 // for TAP calculate checksum, otherwise read it in:
 		if (i == 129) {
 			if (recMem[0] == 0xC3) b = checksum;
@@ -583,32 +701,59 @@ uint8_t offset = 0;
 			if (i) checksum += b;	// omit block#
 		}
 //	
-		for (j=0;j<8;j++) {
-			if (b & 1) {	// 1 Bit
-				downCounter = TIMECONST2;
-				while (downCounter) { };	// same timing mechanism as with record
-				PORTA ^= 1<<REPLAY;
-				downCounter = TIMECONST2;
-				while (downCounter) { };	// same timing mechanism as with record
-				PORTA ^= 1<<REPLAY;
-			}
-			else {			// 0 Bit
-				_delay_us(TIMECONST1);
-				downCounter = TIMECONST1;
-				while (downCounter) { };	// same timing mechanism as with record
-				PORTA ^= 1<<REPLAY;
-				downCounter = TIMECONST1;
-				while (downCounter) { };	// same timing mechanism as with record
-				PORTA ^= 1<<REPLAY;
-			}
-			b = b >> 1;		// right shift Byte
-		}
-	}
+        playByte( b);
+    }
+    blockGap();
+}	// end of playBlock
+
+
+void byteSeparator( void)
+{
+    // byte separator
+    downCounter = TIMECONST3;
+    while (downCounter) { };	// same timing mechanism as with record
+    PORTA ^= 1<<REPLAY;
+    downCounter = TIMECONST3;
+    while (downCounter) { };	// same timing mechanism as with record
+    PORTA ^= 1<<REPLAY;
+}
+
+void blockGap( void)
+{
 	downCounter = TIMECONST3;
 	while (downCounter) { };	// same timing mechanism as with record
 	PORTA ^= 1<<REPLAY;
 	_delay_ms(20);		// 20 milliseconds gap after each block 
-}	// end of playBlock
+}
+
+
+void playByte( uint8_t b)
+{
+    uint8_t j;
+
+    for (j=0;j<8;j++) {
+        if (b & 1) {	// 1 Bit
+            downCounter = TIMECONST2;
+            while (downCounter) { };	// same timing mechanism as with record
+            PORTA ^= 1<<REPLAY;
+            downCounter = TIMECONST2;
+            while (downCounter) { };	// same timing mechanism as with record
+            PORTA ^= 1<<REPLAY;
+        }
+        else {			// 0 Bit
+            _delay_us(TIMECONST1);
+            downCounter = TIMECONST1;
+            while (downCounter) { };	// same timing mechanism as with record
+            PORTA ^= 1<<REPLAY;
+            downCounter = TIMECONST1;
+            while (downCounter) { };	// same timing mechanism as with record
+            PORTA ^= 1<<REPLAY;
+        }
+        b = b >> 1;		// right shift Byte
+    }
+}	// end of playByte
+
+
 
 void displayInitScreen(void)	// show general info for some seconds at power on
 {
@@ -620,12 +765,14 @@ void displayInitScreen(void)	// show general info for some seconds at power on
 		_delay_ms(1500);
 }	// end of displayInitScreen
 
+
 void displayMenu(char * c)
 {
 	lcd_clear();
 	lcd_string_xy(0,3,c);
     lcd_put_logo( 6, 1);
 }	// end of dispMenu
+
 
 void dispFileName(char *filename)
 {

@@ -12,10 +12,14 @@
 #define YES_KEY		PD6
 #define NO_KEY		PD4
 
-extern volatile uint8_t breakFlag; // this is only a declaration
-extern 			uint8_t isTAP;
-extern			uint8_t	RLEmode;
+enum    filetypes { type_tap, type_kcc, type_kcb, type_other};
 
-void FileDialog( void);
+extern volatile uint8_t   breakFlag; // this is only a declaration
+extern enum filetypes     filetype;
+extern          uint32_t  nblocks;
+extern			uint8_t	  RLEmode;
+
+void            FileDialog( void);
+enum filetypes  getFileType( char* filename);
 
 #endif // FILEWORK_H

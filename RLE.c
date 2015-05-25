@@ -62,7 +62,6 @@ uint8_t		byte;
 uint32_t 	j;
 uint32_t	x;
 uint32_t	nEdges = 0;		// number of signal level changes
-	sermem_reset();			// reset serial mem to position zero
 //
 	if (RAMcounter == 0) {
 		pending = 0;		// allow next input

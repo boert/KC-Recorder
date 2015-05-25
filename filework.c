@@ -173,7 +173,6 @@ uint8_t loadFile()
 uint32_t i;
 uint8_t	 j;
 uint8_t  buff[128];
-uint32_t nblocks;
 uint8_t  lastblock;
 	RAMcounter = 0;	// nothing valid yet loaded
 	strcpy(filename,"            ");	// reset file name  
@@ -185,6 +184,7 @@ uint8_t  lastblock;
 		displayMenu("Rec Play End DIR");
 		strcpy(filename,(fileList + 13 * (dirPos-numDirs)));
 		dispFileName(filename);
+        filetype = getFileType( filename);
 		PLAY_LED_ON;	// already switch Play LED on, because Replay always follows
 		Fopen(filename,F_READ);
 		RAMcounter = FileSize;
@@ -208,8 +208,6 @@ uint8_t  lastblock;
 		}
 */
 		Fclose();
-		isTAP = 0;
-		if (recMem[0] == 0xC3) isTAP = 16;	// offset for TAP files
 		return 1;	// file loaded
 	}
 	else {	// if it is a dir:
@@ -250,3 +248,22 @@ uint8_t j;
 		}
 	}
 }	// end of deleteDialog
+
+
+
+// determine filetype from file extension
+enum filetypes getFileType( char* filename)
+{
+    uint8_t len;
+    char*   extension;
+
+    len = strlen( filename);
+    if( len > 2)
+    {
+        extension = filename + len - 3;
+        if( 0 == strncasecmp( "tap", extension, 3))  return type_tap;
+        if( 0 == strncasecmp( "kcc", extension, 3))  return type_kcc;
+        if( 0 == strncasecmp( "kcb", extension, 3))  return type_kcb;
+    }
+    return type_other;
+}

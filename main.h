@@ -1,7 +1,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#define VERSION		"0.9d 14-Apr-2015"
+#define VERSION		"1.0B 25-May-2015"
 #define F_CPU 18432000ul
 #define USART_BAUD 9600ul
 #define USART_UBRR_VALUE ((F_CPU/(USART_BAUD<<4))-1)
