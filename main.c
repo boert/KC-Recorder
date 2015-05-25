@@ -42,6 +42,7 @@ int main(void)
 	initUART();		// prepare UART settings
 	lcd_init();		// initialize LCD, cursor off
 	sermem_init();	// initialize serial memory
+    ramcheck();     // check memory size
 	// output redirect
 	stdout = &uart_output;
 	sei();
@@ -89,3 +90,49 @@ uint8_t	c;
 	return c;
 }	// end of uart_getChar
 
+
+// perfom a memory check 
+// return how many memory (in kBytes) is availible
+uint16_t ramcheck( void)
+{
+    uint32_t index;
+    uint32_t value;
+    uint16_t max_kbytes = 512 * 4;
+
+
+    lcd_string_P( PSTR( "RAM check"));
+    lcd_setcursor( 0, 1);
+    lcd_string_P( PSTR( "fill..."));
+
+    for( index = 0; index < max_kbytes; index++)
+    {
+        sermem_writeDword( index);
+        sermem_skip( 1024 - sizeof( index)); 
+    }
+    sermem_reset();
+
+    lcd_setcursor( 0, 2);
+    lcd_string_P( PSTR( "test..."));
+    index = 0;
+    while( 1)
+    {
+        value = sermem_readDword();
+        sermem_skip( 1024 - sizeof( index)); 
+
+        if( value != index) break;
+        index++;
+        if( index == max_kbytes) break;
+    }
+    sermem_reset();
+
+    lcd_setcursor( 0, 3);
+    lcd_string_P( PSTR( "found "));
+    utoa( index, (char *) recMem, 10);
+    lcd_string( (char *) recMem);
+    lcd_string_P( PSTR( " kB"));
+
+    _delay_ms( 2000);
+    lcd_clear();
+
+    return  (uint16_t) index;
+}

@@ -19,5 +19,8 @@ void	sermem_init(void);		// intialize ports etc., must be called first
 void	sermem_reset(void);		// reset RAM counter to begin of RAM
 uint8_t	sermem_readByte(void);		// read byte and increment
 void	sermem_writeByte(uint8_t);	// write byte and increment
+uint32_t sermem_readDword( void);		// read 32 bit and increment
+void	 sermem_writeDword( uint32_t);	// write 32 bit and increment
+void     sermem_skip( uint32_t count);  // skip some bytes
 
 #endif // SERMEM_H
