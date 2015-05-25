@@ -105,6 +105,10 @@ void lcd_number( uint8_t number, uint8_t len, uint8_t fill );
 // Ausgabe einer Zahl an einer bestimmten Cursorposition 
 // Zahl liegt im RAM
 void lcd_number_xy( uint8_t x, uint8_t y, uint8_t number, uint8_t len, uint8_t fill );
+
+////////////////////////////////////////////////////////////////////////////////
+// Schreibt eine 2stellige Hexzahl
+void lcd_hexnumber( uint8_t number); 
  
 ////////////////////////////////////////////////////////////////////////////////
 // Ausgabe eines Strings an der aktuellen Cursorposition

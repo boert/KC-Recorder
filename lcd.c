@@ -176,6 +176,27 @@ void lcd_number_xy( uint8_t x, uint8_t y, uint8_t number, uint8_t len, uint8_t f
     lcd_number( number, len, fill );
 }
  
+
+////////////////////////////////////////////////////////////////////////////////
+// Schreibt eine 2stellige Hexzahl
+void lcd_hexnumber( uint8_t number) 
+{
+    void lcd_nibble( uint8_t num)
+    {
+        if ( num < 10)
+        {
+            lcd_data( '0' + num);
+        }
+        else
+        {
+            lcd_data( 'A'  - 10 + num);
+        }
+    }
+
+    lcd_nibble( number >> 4);
+    lcd_nibble( number &  0xf);
+}
+ 
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt einen String auf das LCD
 // String liegt direkt im Flash Speicher
