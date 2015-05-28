@@ -69,6 +69,7 @@ LICENSE:
 #include <avr/boot.h>
 #include <avr/pgmspace.h>
 #include "command.h"
+#include "lcd.h"
 
 /*
  * Uncomment the following lines to save code space 
@@ -76,12 +77,12 @@ LICENSE:
 //#define REMOVE_PROGRAM_LOCK_BIT_SUPPORT  // disable program lock bits
 //#define REMOVE_BOOTLOADER_LED            // no LED to show active bootloader
 #define REMOVE_PROG_PIN_PULLUP           // disable internal pullup, use external 
-#define REMOVE_CMD_SPI_MULTI             // disable processing of SPI_MULTI commands
+//#define REMOVE_CMD_SPI_MULTI             // disable processing of SPI_MULTI commands
 
 /*
  *  Uncomment to leave bootloader and jump to application after programming.
  */
-//#define ENABLE_LEAVE_BOOTLADER           
+#define ENABLE_LEAVE_BOOTLADER           
 
 /* 
  * Pin "PROG_PIN" on port "PROG_PORT" has to be pulled low
@@ -107,6 +108,10 @@ LICENSE:
 #ifndef F_CPU
 #define F_CPU 7372800UL
 #endif
+
+
+#define F_COUNT (F_CPU/100)
+uint32_t f_counter = F_COUNT;
 
 /*
  * define which UART channel will be used, if device with two UARTs is used
@@ -141,7 +146,7 @@ LICENSE:
  * Calculate the address where the bootloader starts from FLASHEND and BOOTSIZE
  * (adjust BOOTSIZE below and BOOTLOADER_ADDRESS in Makefile if you want to change the size of the bootloader)
  */
-#define BOOTSIZE 512
+#define BOOTSIZE 1024
 #define APP_END  (FLASHEND -(2*BOOTSIZE) + 1)
 
 
@@ -330,7 +335,21 @@ static void sendchar(char c)
  */
 static unsigned char recchar(void)
 {
-    while(!(UART_STATUS_REG & (1 << UART_RECEIVE_COMPLETE)));  // wait for data
+    while(!(UART_STATUS_REG & (1 << UART_RECEIVE_COMPLETE)))   // wait for data
+    {
+        #ifndef REMOVE_BOOTLOADER_LED
+        if( f_counter == 0)
+        {
+            // toggle LED
+            PROGLED_PORT ^= (1<<PROGLED_PIN);
+            f_counter = F_COUNT;
+        }
+        else
+        {
+            f_counter--;
+        }
+        #endif
+    }
     return UART_DATA_REG;
 }
 
@@ -373,7 +392,16 @@ int main(void)
 #endif       
         UART_BAUD_RATE_LOW = UART_BAUD_SELECT(BAUDRATE,F_CPU);
         UART_CONTROL_REG   = (1 << UART_ENABLE_RECEIVER) | (1 << UART_ENABLE_TRANSMITTER); 
-        
+
+        lcd_init();
+		lcd_data( 'b');
+		lcd_data( 'o');
+		lcd_data( 'o');
+		lcd_data( 't');
+		lcd_data( 'm');
+		lcd_data( 'o');
+		lcd_data( 'd');
+		lcd_data( 'e');
         
         /* main loop */
         while(!isLeave)                             

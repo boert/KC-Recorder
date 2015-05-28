@@ -49,7 +49,12 @@ F_CPU = 18432000
 # Bootloader
 # Please adjust if using a different AVR
 # 0x0e00*2=0x1C00 for ATmega8  512 words Boot Size
-BOOTLOADER_ADDRESS = 1E000
+# for ATmega1284p (incl. hfuses)
+# 1E000 = F000 = 4096 words = 0xd8
+# 1F000 = F800 = 2048 words = 0xda
+# 1F800 = FC00 = 1024 words = 0xdc
+# 1FC00 = FE00 =  512 words = 0xde
+BOOTLOADER_ADDRESS = 1F000
 
 
 # Output format. (can be srec, ihex, binary)
@@ -61,7 +66,7 @@ TARGET = stk500boot
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c 
+SRC = $(TARGET).c lcd.c
 
 
 # List Assembler source files here.
@@ -121,8 +126,8 @@ CINCS =
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS) $(CINCS)
 CFLAGS += -O$(OPT)
-#CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -mno-tablejump 
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fno-jump-tables
+CFLAGS += -ffunction-sections
 CFLAGS += -Wall -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:.c=.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
@@ -188,6 +193,7 @@ EXTMEMOPTS =
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
 LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
+LDFLAGS += -Wl,-gc-sections
 LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
@@ -210,8 +216,8 @@ AVRDUDE_PROGRAMMER = stk500v2
 # com1 = serial port. Use lpt1 to connect to parallel port.
 AVRDUDE_PORT = com1    # programmer connected to serial device
 
-#AVRDUDE_PROGRAMMER = avr910
-#AVRDUDE_PORT = /dev/tty.usbserial-A2P2OMZ2 -b 115200
+AVRDUDE_PROGRAMMER = avr910
+AVRDUDE_PORT = /dev/tty.usbserial-A2P2OMZ2 -b 115200
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 #AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
@@ -219,7 +225,7 @@ AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 
 # http://www.engbedded.com/fusecalc
 AVRDUDE_WRITE_LFUSE = -U lfuse:w:0xff:m 
-AVRDUDE_WRITE_HFUSE = -U hfuse:w:0xde:m 
+AVRDUDE_WRITE_HFUSE = -U hfuse:w:0xda:m 
 AVRDUDE_WRITE_EFUSE = -U efuse:w:0xff:m 
 
 
