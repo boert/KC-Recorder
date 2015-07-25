@@ -629,7 +629,7 @@ void KCCreplay( void)
     while (pos < RAMcounter) {
         progress( block, pos * 80 / RAMcounter);
 
-        beep( 160);
+        beep( 180);
         byteSeparator();
         if (( RAMcounter - pos) > 128)
         {
@@ -688,7 +688,7 @@ uint8_t offset = 0;
 	}
 	if (recMem[offset] == 0) offset += BlkLen;	// KC87 program, begins with block# 0
 	if (recMem[offset + 1] == 0xD5) beep(1800);	// list#1 requires long beep
-	else beep(160);
+	else beep(180);
 	for (i=0;i<130;i++) {
         byteSeparator();
 // for TAP calculate checksum, otherwise read it in:
