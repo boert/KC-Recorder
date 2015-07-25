@@ -76,7 +76,7 @@ LICENSE:
  */
 //#define REMOVE_PROGRAM_LOCK_BIT_SUPPORT  // disable program lock bits
 //#define REMOVE_BOOTLOADER_LED            // no LED to show active bootloader
-#define REMOVE_PROG_PIN_PULLUP           // disable internal pullup, use external 
+//#define REMOVE_PROG_PIN_PULLUP           // disable internal pullup, use external 
 //#define REMOVE_CMD_SPI_MULTI             // disable processing of SPI_MULTI commands
 
 /*
