@@ -23,7 +23,7 @@ ISR (TIMER0_COMPA_vect)
 	downCounter--;	// 8  bit counter for replay
 }
 	
-static FILE uart_output = FDEV_SETUP_STREAM(uart_putChar, NULL, _FDEV_SETUP_WRITE);
+static FILE uart_output = FDEV_SETUP_STREAM(uart_putChar_stream, NULL, _FDEV_SETUP_WRITE);
 
 int main(void)
 {
@@ -67,7 +67,12 @@ void initUART(void)
 	UCSR0C = (1<<UCSZ01) | (1<<UCSZ00);	// 8N1 format
 }	// end of initUART
 
-int uart_putChar(uint8_t c)
+int uart_putChar_stream(char c, FILE* stream)
+{
+    return uart_putChar(c);
+}
+
+int uart_putChar(char c)
 {
 	while (!(UCSR0A & (1<<UDRE0)))  // wait until send allowed
 	{ 
