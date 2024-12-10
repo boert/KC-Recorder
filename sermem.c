@@ -40,3 +40,42 @@ void	sermem_writeByte(uint8_t x)
 	SM_CTRL_OUT |= (1<<CP);
 	SM_CTRL_OUT &= ~(1<<CP);	// CP high to low triggers increment
 }	// end of sermem_writeByte
+
+
+// read 32 bit and increment
+uint32_t sermem_readDword( void)
+{
+    uint32_t result;
+    uint8_t* ptr = (uint8_t*) &result;
+    uint8_t  index;
+
+    for( index = 0; index < 4; index++)
+    {
+        *(ptr++) = sermem_readByte();
+    }
+    return result;
+}
+
+// write 32 bit and increment
+void	 sermem_writeDword( uint32_t data)
+{
+    uint8_t* ptr = (uint8_t*) &data;
+    uint8_t index;
+
+    for( index = 0; index < 4; index++)
+    {
+        sermem_writeByte( *(ptr++));
+    }
+}
+
+// skip some bytes
+void    sermem_skip( uint32_t count)
+{
+    uint32_t index;
+
+    for( index = 0; index < count; index++)
+    {
+        SM_CTRL_OUT |= (1<<CP);
+        SM_CTRL_OUT &= ~(1<<CP);	// CP high to low triggers increment
+    }
+}
